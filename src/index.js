@@ -19,7 +19,9 @@ export const getLabels = async () => {
   
   try {
     // Initialize variables for pagination and data collection
-    var allLabels = [], total = 0, startAt = 0;
+    let allLabels = [];
+    let total = 0;
+    let startAt = 0;
     const maxResults = 50; // Process labels in batches of 50
     
     console.debug('[getLabels] Making initial API request to get first page of labels');
@@ -43,7 +45,7 @@ export const getLabels = async () => {
     // Parse the JSON response and extract pagination info
     let data = await response.json();
     total = data.total;
-    const isLast = data.isLast;
+    let isLast = data.isLast;
     const returnedMaxResults = data.maxResults;
     console.log(`[getLabels] Total labels available: ${total}`);
     console.debug(`[getLabels] First page isLast: ${isLast}, maxResults: ${returnedMaxResults}`);
@@ -63,7 +65,7 @@ export const getLabels = async () => {
     }
     
     // Continue fetching remaining pages based on API response indicators
-    while (isLast === false || startAt + maxResults < total) {
+    while (!isLast && startAt + maxResults < total) {
       startAt += maxResults;
       console.debug(`[getLabels] Fetching next page (starting at index: ${startAt})`);
       
@@ -83,8 +85,8 @@ export const getLabels = async () => {
       
       // Parse page response and extract pagination info
       data = await pageResponse.json();
-      const currentIsLast = data.isLast;
-      console.debug(`[getLabels] Current page returned ${data.values?.length || 0} labels, isLast: ${currentIsLast}`);
+      isLast = data.isLast;
+      console.debug(`[getLabels] Current page returned ${data.values?.length || 0} labels, isLast: ${isLast}`);
       
       // Add labels from current page to collection
       if (data.values && data.values.length > 0) {
@@ -95,7 +97,7 @@ export const getLabels = async () => {
       console.debug(`[getLabels] Processed ${allLabels.length}/${total} labels so far`);
       
       // Break if we've reached the end based on API response
-      if (currentIsLast === true || allLabels.length >= total) {
+      if (isLast || allLabels.length >= total) {
         break;
       }
     }
@@ -163,39 +165,39 @@ export const createJiraIssue = async (payload, context) => {
 
 
     // Serialize the issue analysis for inclusion in the description
-    const issueAnalysis = JSON.stringify(payload.issueAnalysis);
+        const issueAnalysis = String(payload.issueAnalysis);
     console.debug("[createJiraIssue] Serialized issue analysis:", issueAnalysis);
 
     // Construct the request body using Atlassian Document Format (ADF)
     // This creates a task in the GOV project for one-atlas-tovb.atlassian.net
-    var bodyData = `{
-    "fields": {
-        "description": {
-            "type": "doc",
-            "version": 1,
-            "content": [
+    const bodyData = {
+      fields: {
+        description: {
+          type: 'doc',
+          version: 1,
+          content: [
+            {
+              type: 'paragraph',
+              content: [
                 {
-                    "type": "paragraph",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": ${issueAnalysis}
-                        }
-                    ]
+                  type: 'text',
+                  text: issueAnalysis
                 }
-            ]
+              ]
+            }
+          ]
         },
-        "issuetype": {
-            "id": "10002"
+        issuetype: {
+          id: '10002'
         },
-        "project": {
-            "id": "10200"
+        project: {
+          id: '10200'
         },
-        "summary": "Redundant labels cleanup. Thank you Rovo!"
-    }
-  }`;
+        summary: 'Redundant labels cleanup. Thank you Rovo!'
+      }
+    };
 
-    console.debug('[createJiraIssue] Request body data:', bodyData);
+    console.debug('[createJiraIssue] Request body data:', JSON.stringify(bodyData));
     console.log('[createJiraIssue] Making API request to create issue');
 
     // Make POST request to create the new issue
@@ -265,7 +267,9 @@ export const getCustomFields = async () => {
   
   try {
     // Initialize variables for pagination and data collection
-    var mappedData = [], total = 0, startAt = 0;
+    let mappedData = [];
+    let total = 0;
+    let startAt = 0;
     const maxResults = 50; // Process custom fields in batches of 50
     
     console.debug('[getCustomFields] Making initial API request to get first page of custom fields');
@@ -287,7 +291,7 @@ export const getCustomFields = async () => {
     // Parse response and extract pagination info
     let result = await response.json();
     total = result.total;
-    const isLast = result.isLast;
+    let isLast = result.isLast;
     const returnedMaxResults = result.maxResults;
     console.log(`[getCustomFields] Total custom fields available: ${total}`);
     console.debug(`[getCustomFields] First page isLast: ${isLast}, maxResults: ${returnedMaxResults}`);
@@ -322,7 +326,7 @@ export const getCustomFields = async () => {
     }
     
     // Continue fetching remaining pages based on API response indicators
-    while (isLast === false || startAt + maxResults < total) {
+    while (!isLast && startAt + maxResults < total) {
       startAt += maxResults;
       console.debug(`[getCustomFields] Fetching next page (starting at index: ${startAt})`);
       
@@ -342,8 +346,8 @@ export const getCustomFields = async () => {
       
       // Parse page response and extract pagination info
       result = await pageResponse.json();
-      const currentIsLast = result.isLast;
-      console.debug(`[getCustomFields] Current page returned ${result.values?.length || 0} custom fields, isLast: ${currentIsLast}`);
+      isLast = result.isLast;
+      console.debug(`[getCustomFields] Current page returned ${result.values?.length || 0} custom fields, isLast: ${isLast}`);
       
       // Process each custom field in the current page
       if (result.values && result.values.length > 0) {
@@ -368,7 +372,7 @@ export const getCustomFields = async () => {
       console.debug(`[getCustomFields] Processed ${mappedData.length}/${total} custom fields so far`);
       
       // Break if we've reached the end based on API response
-      if (currentIsLast === true || mappedData.length >= total) {
+      if (isLast || mappedData.length >= total) {
         break;
       }
     }
