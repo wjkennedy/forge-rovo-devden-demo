@@ -1,0 +1,9 @@
+{
+  "name": "jira-admin-helper",
+  "version": "1.0.0",
+  "description": "Forge app for Jira administration helper",
+  "type": "module",
+  "dependencies": {
+    "@forge/api": "^2.10.0"
+  }
+}
